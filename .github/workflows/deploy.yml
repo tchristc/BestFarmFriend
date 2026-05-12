@@ -1,4 +1,4 @@
-name: Deploy BigBestFarm to Azure
+﻿name: Deploy BestFarmFriend to Azure
 
 on:
   push:
@@ -9,7 +9,7 @@ on:
 env:
   AZURE_WEBAPP_NAME: as-bestfarmfreind   # your App Service name
   DOTNET_VERSION: '10.0.x'
-  PROJECT_PATH: src/BigBestFarm.Web/BigBestFarm.Web/BigBestFarm.Web.csproj
+  PROJECT_PATH: src/BestFarmFriend.Web/BestFarmFriend.Web/BestFarmFriend.Web.csproj
 
 jobs:
   build-and-deploy:

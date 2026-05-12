@@ -1,0 +1,146 @@
+﻿@page "/"
+@rendermode InteractiveServer
+@implements IDisposable
+@inject IWeatherService WeatherService
+@inject ICropRepository CropRepo
+@inject ICropAdvisoryService AdvisoryService
+@inject ISprayRuleEngine SprayEngine
+@inject BestFarmFriend.Web.Services.AppState AppState
+
+<PageTitle>Dashboard — BestFarmFriend</PageTitle>
+
+@if (AppState.CurrentLocation == null)
+{
+    <div class="bbf-hero text-center py-5">
+        <h2 class="mb-2">🌾 Welcome to BestFarmFriend</h2>
+        <p class="lead mb-3">Use the location picker in the top navigation to set your farm location and get started.</p>
+    </div>
+}
+else
+{
+    <div class="bbf-hero py-3 px-2 d-flex justify-content-between align-items-center">
+        <div>
+            <h4 class="mb-0 fw-bold">📍 @AppState.CurrentLocation.DisplayName</h4>
+        </div>
+        <div class="text-end">
+            <div class="fw-bold" style="font-size:1.4rem; letter-spacing:0.05em; font-variant-numeric:tabular-nums;">@_clock</div>
+            <div class="opacity-75 small">@_date</div>
+        </div>
+    </div>
+
+    @if (_loading)
+    {
+        <div class="row g-3">
+            <div class="col-md-4"><div class="bbf-skeleton" style="height:260px"></div></div>
+            <div class="col-md-4"><div class="bbf-skeleton" style="height:260px"></div></div>
+            <div class="col-md-4"><div class="bbf-skeleton" style="height:260px"></div></div>
+        </div>
+    }
+    else if (_error != null)
+    {
+        <div class="alert alert-danger">⚠️ @_error</div>
+    }
+    else
+    {
+        <div class="row g-3 mb-4">
+            <div class="col-lg-4 col-md-6">
+                <WeatherCard Weather="_weather" />
+            </div>
+            <div class="col-lg-4 col-md-6">
+                <SprayReadinessCard SprayResult="_sprayResult" />
+            </div>
+            <div class="col-lg-4">
+                <div class="card h-100">
+                    <div class="card-header fw-semibold">📅 7-Day Forecast</div>
+                    <div class="card-body p-2">
+                        @if (_weather?.DailyForecast.Count > 0)
+                        {
+                            <DailyForecastGrid Forecast="_weather.DailyForecast" />
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        @if (_weather?.HourlyForecast.Count > 0)
+        {
+            <div class="card mb-4">
+                <div class="card-header fw-semibold">🕐 Hourly Forecast</div>
+                <div class="card-body p-2">
+                    <HourlyForecastStrip Forecast="_weather.HourlyForecast" />
+                </div>
+            </div>
+        }
+
+        @if (_crops.Count > 0)
+        {
+            <h5 class="mb-3">🌱 My Crops</h5>
+            <div class="bbf-crop-grid">
+                @foreach (var crop in _crops)
+                {
+                    var advisory = _advisories.FirstOrDefault(a => a.CropId == crop.Id);
+                    <CropCard Crop="crop" Advisory="advisory" />
+                }
+            </div>
+        }
+    }
+}
+
+@code {
+    private WeatherSnapshot? _weather;
+    private SprayReadinessResult? _sprayResult;
+    private List<Crop> _crops = new();
+    private List<CropAdvisory> _advisories = new();
+    private bool _loading = true;
+    private string? _error;
+    private string _clock = DateTime.Now.ToString("h:mm tt");
+    private string _date = DateTime.Now.ToString("dddd, MMMM d, yyyy");
+    private Timer? _timer;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _timer = new Timer(_ =>
+        {
+            _clock = DateTime.Now.ToString("h:mm tt");
+            _date = DateTime.Now.ToString("dddd, MMMM d, yyyy");
+            InvokeAsync(StateHasChanged);
+        }, null, TimeSpan.Zero, TimeSpan.FromSeconds(1));
+
+        AppState.OnLocationChanged += async () =>
+        {
+            _loading = true;
+            await LoadDataAsync();
+            StateHasChanged();
+        };
+        await LoadDataAsync();
+    }
+
+    public void Dispose() => _timer?.Dispose();
+
+    private async Task LoadDataAsync()
+    {
+        _loading = true;
+        _error = null;
+        try
+        {
+            _crops = await CropRepo.GetActiveCropsAsync();
+            if (AppState.CurrentLocation != null)
+            {
+                _weather = await WeatherService.GetCurrentWeatherAsync(AppState.CurrentLocation);
+                if (_weather != null)
+                {
+                    _sprayResult = SprayEngine.Evaluate(_weather);
+                    _advisories = await AdvisoryService.GetAdvisoriesAsync(_weather, _crops);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            _error = $"Could not load weather data: {ex.Message}";
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+}

@@ -4,7 +4,7 @@
 This document defines the rules, conditions, and logic for determining whether a given day is suitable
 for spraying orchard crops (fruit trees, nut trees, berry bushes, and vines).
 These rules were provided by an experienced orchard operator and form the core domain logic for the
-BigBestFarm spray-advisory engine.
+BestFarmFriend spray-advisory engine.
 
 ---
 
@@ -171,7 +171,7 @@ Spray rules and product restrictions change by growth stage:
 
 ---
 
-## 7. Integration Points for BigBestFarm App
+## 7. Integration Points for BestFarmFriend App
 
 - WeatherService feeds temperature, wind, humidity, precipitation, forecast into the spray-rule engine
 - SprayRuleEngine evaluates each condition against the rules in sections 1-2 and returns a SprayReadinessResult

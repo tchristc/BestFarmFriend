@@ -1,0 +1,152 @@
+﻿@page "/settings"
+@rendermode InteractiveServer
+@inject ILocationRepository LocationRepo
+@inject IGeocodingService GeocodingService
+@inject BestFarmFriend.Web.Services.AppState AppState
+@inject IConfiguration Config
+
+<PageTitle>Settings — BestFarmFriend</PageTitle>
+
+<h4 class="mb-4">⚙️ Settings</h4>
+
+<div class="row g-4">
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-header fw-semibold">📍 Saved Locations</div>
+            <div class="card-body">
+                @if (_locations.Count == 0)
+                {
+                    <p class="text-muted">No saved locations.</p>
+                }
+                else
+                {
+                    <ul class="list-group list-group-flush mb-3">
+                        @foreach (var loc in _locations)
+                        {
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <div>
+                                    <span class="@(loc.Id == AppState.CurrentLocation?.Id ? "fw-bold text-success" : "")">
+                                        @(loc.IsFavorite ? "⭐" : "📍") @loc.DisplayName
+                                    </span>
+                                    <div class="small text-muted">@loc.Latitude.ToString("F4"), @loc.Longitude.ToString("F4")</div>
+                                </div>
+                                <div class="d-flex gap-1">
+                                    <button class="btn btn-sm btn-outline-success" @onclick="() => SetActive(loc)"
+                                            title="Set active">✓</button>
+                                    <button class="btn btn-sm btn-outline-danger" @onclick="() => DeleteLocation(loc.Id)"
+                                            title="Delete">✕</button>
+                                </div>
+                            </li>
+                        }
+                    </ul>
+                }
+
+                <div class="mb-2">
+                    <label class="form-label small fw-semibold">Add Location</label>
+                    <div class="input-group input-group-sm">
+                        <input type="text" class="form-control" placeholder="Search city or ZIP..."
+                                   @bind="_searchQuery" @oninput="OnSearch" />
+                    </div>
+                </div>
+                @if (_searchResults.Count > 0)
+                {
+                    <div class="list-group list-group-flush">
+                        @foreach (var r in _searchResults)
+                        {
+                            <button class="list-group-item list-group-item-action small py-1"
+                                    @onclick="() => AddLocation(r)">
+                                📍 @r.DisplayName
+                            </button>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-6">
+        <div class="card mb-3">
+            <div class="card-header fw-semibold">🤖 AI Configuration</div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <label class="form-label small fw-semibold">OpenAI API Key</label>
+                    <input type="password" class="form-control form-control-sm"
+                           placeholder="sk-..." @bind="_aiKey" />
+                    <div class="form-text">Stored in app secrets / environment. Set <code>AI:ApiKey</code> in appsettings or user-secrets.</div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label small fw-semibold">Model</label>
+                    <select class="form-select form-select-sm" @bind="_aiModel">
+                        <option value="gpt-4o">gpt-4o (recommended)</option>
+                        <option value="gpt-4o-mini">gpt-4o-mini (faster, cheaper)</option>
+                        <option value="gpt-4-turbo">gpt-4-turbo</option>
+                    </select>
+                </div>
+                <div class="alert alert-info small mb-0">
+                    💡 AI key is currently read from <code>AI:ApiKey</code> in configuration. Use <code>dotnet user-secrets</code> for local dev.
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header fw-semibold">ℹ️ About</div>
+            <div class="card-body small text-muted">
+                <p><strong>BestFarmFriend</strong> — Agricultural weather &amp; spray advisor</p>
+                <ul class="mb-1">
+                    <li>Weather: <a href="https://open-meteo.com" target="_blank">Open-Meteo</a> (free, no key required)</li>
+                    <li>Geocoding: Open-Meteo Geocoding API</li>
+                    <li>AI: OpenAI GPT-4o via official .NET SDK</li>
+                    <li>Framework: ASP.NET Core 10 Blazor Web App</li>
+                </ul>
+                <p class="mb-0 text-warning">⚠️ For informational purposes only. Always follow local regulations for pesticide application.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private List<Location> _locations = new();
+    private List<Location> _searchResults = new();
+    private string _searchQuery = "";
+    private string _aiKey = "";
+    private string _aiModel = "gpt-4o";
+
+    protected override async Task OnInitializedAsync()
+    {
+        _locations = await LocationRepo.GetAllAsync();
+        _aiKey = Config["AI:ApiKey"] ?? "";
+        _aiModel = Config["AI:Model"] ?? "gpt-4o";
+    }
+
+    private async Task OnSearch(ChangeEventArgs e)
+    {
+        _searchQuery = e.Value?.ToString() ?? "";
+        if (_searchQuery.Length >= 2)
+            _searchResults = await GeocodingService.SearchAsync(_searchQuery);
+        else
+            _searchResults.Clear();
+    }
+
+    private async Task AddLocation(Location loc)
+    {
+        loc = await LocationRepo.AddAsync(loc);
+        _locations = await LocationRepo.GetAllAsync();
+        _searchResults.Clear();
+        _searchQuery = "";
+        if (AppState.CurrentLocation == null)
+            AppState.CurrentLocation = loc;
+    }
+
+    private async Task DeleteLocation(int id)
+    {
+        await LocationRepo.DeleteAsync(id);
+        _locations = await LocationRepo.GetAllAsync();
+        if (AppState.CurrentLocation?.Id == id)
+            AppState.CurrentLocation = _locations.FirstOrDefault();
+    }
+
+    private void SetActive(Location loc)
+    {
+        AppState.CurrentLocation = loc;
+    }
+}

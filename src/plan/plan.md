@@ -1,4 +1,4 @@
-﻿# BigBestFarm — Development Plan
+﻿# BestFarmFriend — Development Plan
 Version 1.0
 
 ---
@@ -22,9 +22,9 @@ Version 1.0
 
 ### Sprint 1: Solution Scaffolding (Days 1-2)
 Tasks:
-1. Create solution: dotnet new blazorwasm --hosted -n BigBestFarm OR dotnet new blazorwebapp
+1. Create solution: dotnet new blazorwasm --hosted -n BestFarmFriend OR dotnet new blazorwebapp
    - Use "Blazor Web App" template (.NET 10) with InteractiveAuto render mode
-   - Projects: BigBestFarm.Web, BigBestFarm.Core, BigBestFarm.Infrastructure
+   - Projects: BestFarmFriend.Web, BestFarmFriend.Core, BestFarmFriend.Infrastructure
 2. Add project references: Web -> Core, Web -> Infrastructure, Infrastructure -> Core
 3. Add NuGet packages:
    - Microsoft.EntityFrameworkCore.Sqlite
@@ -36,7 +36,7 @@ Tasks:
 6. Add appsettings.json with placeholder sections: Weather, AI, ConnectionStrings
 
 ### Sprint 2: Core Domain Models (Days 2-3)
-Files to create in BigBestFarm.Core/Models/:
+Files to create in BestFarmFriend.Core/Models/:
 - Location.cs
 - WeatherSnapshot.cs
 - WeatherForecastDay.cs
@@ -58,13 +58,13 @@ Files to create in BigBestFarm.Core/Models/:
 - UserSettings.cs
 
 ### Sprint 3: Infrastructure — Weather & Geocoding (Days 3-4)
-Files in BigBestFarm.Infrastructure/WeatherApi/:
+Files in BestFarmFriend.Infrastructure/WeatherApi/:
 - OpenMeteoClient.cs        -- HttpClient wrapper for current + forecast
 - OpenMeteoCurrentDto.cs    -- JSON deserialization DTOs
 - OpenMeteoForecastDto.cs
 - WeatherMapper.cs          -- DTOs -> domain models
 
-Files in BigBestFarm.Infrastructure/GeocodingApi/:
+Files in BestFarmFriend.Infrastructure/GeocodingApi/:
 - GeocodingClient.cs        -- Open-Meteo geocoding search
 - GeocodingResultDto.cs
 - GeocodingMapper.cs
@@ -74,7 +74,7 @@ Register HttpClient factories in DI:
 - Named client "Geocoding" with base address
 
 ### Sprint 4: Core Services — Spray Rule Engine (Days 4-5)
-Files in BigBestFarm.Core/Rules/:
+Files in BestFarmFriend.Core/Rules/:
 - WindRule.cs
 - PrecipitationRule.cs
 - TemperatureRule.cs
@@ -86,7 +86,7 @@ Files in BigBestFarm.Core/Rules/:
 - InsecticideRule.cs
 - HerbicideRule.cs
 
-Files in BigBestFarm.Core/Services/:
+Files in BestFarmFriend.Core/Services/:
 - SprayRuleEngine.cs          -- Aggregate all rules -> SprayReadinessResult
 - WeatherService.cs           -- Wraps OpenMeteoClient, adds caching (IMemoryCache)
 - GeocodingService.cs         -- Wraps GeocodingClient
@@ -97,7 +97,7 @@ Files in BigBestFarm.Core/Services/:
 - CalendarService.cs          -- Seasonal stage + action calendar builder
 
 ### Sprint 5: Data Layer (Days 5-6)
-Files in BigBestFarm.Infrastructure/Data/:
+Files in BestFarmFriend.Infrastructure/Data/:
 - AppDbContext.cs              -- EF Core DbContext; DbSets for Crop, CropAction, Location, etc.
 - Migrations/                 -- EF migrations
 - Seed/
@@ -105,13 +105,13 @@ Files in BigBestFarm.Infrastructure/Data/:
   - CropActionSeeder.cs       -- Default actions per crop
   - GrowthStageSeeder.cs      -- Growth stage calendar data per crop
 
-Files in BigBestFarm.Infrastructure/Repositories/:
+Files in BestFarmFriend.Infrastructure/Repositories/:
 - LocationRepository.cs
 - CropRepository.cs
 - CropAdvisoryRepository.cs
 
 ### Sprint 6: Blazor UI — Layout & Shared Components (Days 6-8)
-Files in BigBestFarm.Web/Components/:
+Files in BestFarmFriend.Web/Components/:
 
 Layout/:
 - MainLayout.razor            -- Sidebar nav + top bar + content
@@ -237,22 +237,22 @@ User:   "Today is {Date}. Location: {LocationName}.
 
 ## NuGet Package List
 
-BigBestFarm.Web:
+BestFarmFriend.Web:
 - Microsoft.EntityFrameworkCore.Sqlite
 - Microsoft.EntityFrameworkCore.Design
 - Serilog.AspNetCore
 - Serilog.Sinks.File
 - OpenAI (v2.x official)
 
-BigBestFarm.Infrastructure:
+BestFarmFriend.Infrastructure:
 - Microsoft.EntityFrameworkCore.Sqlite
 - Microsoft.Extensions.Http
 
-BigBestFarm.Core:
+BestFarmFriend.Core:
 - Microsoft.Extensions.Caching.Abstractions
 - Microsoft.Extensions.DependencyInjection.Abstractions
 
-BigBestFarm.Tests.Unit:
+BestFarmFriend.Tests.Unit:
 - xunit
 - Moq (or NSubstitute)
 - FluentAssertions
