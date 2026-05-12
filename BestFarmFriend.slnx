@@ -1,6 +1,5 @@
-﻿<Solution>
+<Solution>
   <Folder Name="/src/">
-    <File Path="src/plan/plan.md" />
     <Project Path="src/BestFarmFriend.Core/BestFarmFriend.Core.csproj" />
     <Project Path="src/BestFarmFriend.Infrastructure/BestFarmFriend.Infrastructure.csproj" />
   </Folder>
