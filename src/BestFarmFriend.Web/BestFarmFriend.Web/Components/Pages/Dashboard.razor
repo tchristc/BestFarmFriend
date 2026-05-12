@@ -93,22 +93,44 @@ else
     private List<CropAdvisory> _advisories = new();
     private bool _loading = true;
     private string? _error;
-    private string _clock = DateTime.Now.ToString("h:mm tt");
-    private string _date = DateTime.Now.ToString("dddd, MMMM d, yyyy");
+    private string _clock = string.Empty;
+    private string _date = string.Empty;
     private Timer? _timer;
+
+    private DateTime LocationNow()
+    {
+        if (AppState.CurrentLocation?.Timezone is { Length: > 0 } tz)
+        {
+            try
+            {
+                var tzi = TimeZoneInfo.FindSystemTimeZoneById(tz);
+                return TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, tzi);
+            }
+            catch { }
+        }
+        return DateTime.Now;
+    }
+
+    private void UpdateClock()
+    {
+        var now = LocationNow();
+        _clock = now.ToString("h:mm tt");
+        _date  = now.ToString("dddd, MMMM d, yyyy");
+    }
 
     protected override async Task OnInitializedAsync()
     {
+        UpdateClock();
         _timer = new Timer(_ =>
         {
-            _clock = DateTime.Now.ToString("h:mm tt");
-            _date = DateTime.Now.ToString("dddd, MMMM d, yyyy");
+            UpdateClock();
             InvokeAsync(StateHasChanged);
         }, null, TimeSpan.Zero, TimeSpan.FromSeconds(1));
 
         AppState.OnLocationChanged += async () =>
         {
             _loading = true;
+            UpdateClock();
             await LoadDataAsync();
             StateHasChanged();
         };
