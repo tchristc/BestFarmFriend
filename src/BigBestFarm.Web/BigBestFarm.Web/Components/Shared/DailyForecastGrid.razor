@@ -1,0 +1,27 @@
+@if (Forecast.Count > 0)
+{
+    <div class="row g-2">
+        @foreach (var day in Forecast.Take(7))
+        {
+            <div class="col-12 col-sm-6 col-md-4 col-lg-3 col-xl">
+                <div class="card bbf-daily-card text-center p-2">
+                    <div class="small fw-semibold">@day.Date.ToString("ddd M/d")</div>
+                    <WeatherIcon Condition="day.Condition" CssClass="bbf-icon-md mx-auto" />
+                    <div class="small">
+                        <span class="fw-bold">@day.HighF.ToString("F0")°</span>
+                        <span class="text-muted"> / @day.LowF.ToString("F0")°</span>
+                    </div>
+                    @if (day.PrecipProbabilityPct > 0)
+                    {
+                        <div class="small text-primary">💧 @day.PrecipProbabilityPct.ToString("F0")%</div>
+                    }
+                    <div class="small text-muted">@day.WindSpeedMaxMph.ToString("F0") mph</div>
+                </div>
+            </div>
+        }
+    </div>
+}
+
+@code {
+    [Parameter] public List<WeatherForecastDay> Forecast { get; set; } = new();
+}

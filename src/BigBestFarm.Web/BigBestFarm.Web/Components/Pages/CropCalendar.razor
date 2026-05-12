@@ -1,0 +1,174 @@
+@page "/calendar"
+@rendermode InteractiveServer
+@inject ICropRepository CropRepo
+@inject IGrowthStageService GrowthStageService
+@inject BigBestFarm.Web.Services.AppState AppState
+
+<PageTitle>Crop Calendar — BigBestFarm</PageTitle>
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h4 class="mb-0">📅 Crop Calendar</h4>
+    <div class="d-flex align-items-center gap-2">
+        <button class="btn btn-sm btn-outline-secondary" @onclick="PrevMonth">‹</button>
+        <span class="fw-semibold">@_viewDate.ToString("MMMM yyyy")</span>
+        <button class="btn btn-sm btn-outline-secondary" @onclick="NextMonth">›</button>
+        <button class="btn btn-sm btn-outline-primary" @onclick="GoToday">Today</button>
+    </div>
+</div>
+
+@if (_crops.Count == 0)
+{
+    <div class="alert alert-info">No active crops. <a href="/crops">Manage crops →</a></div>
+}
+else
+{
+    <div class="mb-3 d-flex flex-wrap gap-2">
+        @foreach (var crop in _crops)
+        {
+            <button class="btn btn-sm @(_selectedCropId == crop.Id ? "btn-success" : "btn-outline-secondary")"
+                    @onclick="() => _selectedCropId = crop.Id">
+                @GetCropEmoji(crop.Slug) @crop.Name
+            </button>
+        }
+    </div>
+
+    @if (_selectedCrop != null)
+    {
+        <div class="bbf-calendar-month">
+            <div class="bbf-calendar-header d-flex justify-content-between">
+                <span>@_viewDate.ToString("MMMM yyyy") — @_selectedCrop.Name</span>
+                <span class="small opacity-75">Current stage: @_currentStage.ToString()</span>
+            </div>
+
+            <div class="bbf-calendar-grid">
+                @foreach (var dow in new[] { "Sun","Mon","Tue","Wed","Thu","Fri","Sat" })
+                {
+                    <div class="text-center py-1 small fw-bold border bg-light">@dow</div>
+                }
+
+                @foreach (var cell in _calendarCells)
+                {
+                    <div class="bbf-calendar-day @(cell.OtherMonth ? "other-month" : "") @(cell.IsToday ? "today" : "")">
+                        <div class="bbf-cal-date">@cell.Date.Day</div>
+                        @foreach (var task in cell.Tasks.Take(3))
+                        {
+                            <div class="bbf-cal-task">@task</div>
+                        }
+                        @if (cell.Tasks.Count > 3)
+                        {
+                            <div class="bbf-cal-task" style="background:#78909c">+@(cell.Tasks.Count-3) more</div>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+
+        @if (_selectedCrop.GrowthStages.Count > 0)
+        {
+            <div class="card mt-3">
+                <div class="card-header fw-semibold">🌿 Stage Timeline for @_viewDate.Year</div>
+                <div class="card-body p-0">
+                    <table class="table table-sm mb-0">
+                        <thead class="table-light">
+                            <tr><th>Stage</th><th>Days</th><th>Key Actions</th><th>Warnings</th></tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var stage in _selectedCrop.GrowthStages)
+                            {
+                                <tr class="@(stage.Stage == _currentStage ? "table-success" : "")">
+                                    <td class="fw-semibold">@stage.DisplayName</td>
+                                    <td class="small text-muted">Day @stage.TypicalStartDayOfYear – @stage.TypicalEndDayOfYear</td>
+                                    <td class="small">@stage.KeyActions</td>
+                                    <td class="small text-warning">@stage.Warnings</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        }
+    }
+}
+
+@code {
+    private List<Crop> _crops = new();
+    private int _selectedCropId;
+    private DateOnly _viewDate = DateOnly.FromDateTime(DateTime.Today);
+    private GrowthStageCode _currentStage;
+    private List<CalendarCell> _calendarCells = new();
+
+    private Crop? _selectedCrop => _crops.FirstOrDefault(c => c.Id == _selectedCropId);
+
+    protected override async Task OnInitializedAsync()
+    {
+        _crops = await CropRepo.GetActiveCropsAsync();
+        if (_crops.Count > 0)
+        {
+            _selectedCropId = _crops[0].Id;
+            BuildCalendar();
+        }
+    }
+
+    protected override void OnParametersSet() => BuildCalendar();
+
+    private void BuildCalendar()
+    {
+        var crop = _selectedCrop;
+        if (crop == null) return;
+
+        _currentStage = GrowthStageService.EstimateCurrentStage(crop, DateOnly.FromDateTime(DateTime.Today));
+
+        var firstDay = new DateOnly(_viewDate.Year, _viewDate.Month, 1);
+        var startOffset = (int)firstDay.DayOfWeek;
+        var daysInMonth = DateTime.DaysInMonth(_viewDate.Year, _viewDate.Month);
+        var today = DateOnly.FromDateTime(DateTime.Today);
+
+        _calendarCells = new();
+        for (int i = 0; i < startOffset; i++)
+            _calendarCells.Add(new CalendarCell { Date = firstDay.AddDays(-(startOffset - i)), OtherMonth = true });
+
+        for (int d = 1; d <= daysInMonth; d++)
+        {
+            var date = new DateOnly(_viewDate.Year, _viewDate.Month, d);
+            var stage = GrowthStageService.EstimateCurrentStage(crop, date);
+            var stageEntry = GrowthStageService.GetStageEntry(crop, stage);
+            var tasks = new List<string>();
+            if (stageEntry != null && !string.IsNullOrEmpty(stageEntry.KeyActions))
+            {
+                foreach (var t in stageEntry.KeyActions.Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+                    tasks.Add(t);
+            }
+            _calendarCells.Add(new CalendarCell { Date = date, IsToday = date == today, Tasks = tasks });
+        }
+
+        var remaining = 42 - _calendarCells.Count;
+        var lastDay = new DateOnly(_viewDate.Year, _viewDate.Month, daysInMonth);
+        for (int i = 1; i <= remaining; i++)
+            _calendarCells.Add(new CalendarCell { Date = lastDay.AddDays(i), OtherMonth = true });
+    }
+
+    private void PrevMonth() { _viewDate = _viewDate.AddMonths(-1); BuildCalendar(); }
+    private void NextMonth() { _viewDate = _viewDate.AddMonths(1);  BuildCalendar(); }
+    private void GoToday()   { _viewDate = DateOnly.FromDateTime(DateTime.Today); BuildCalendar(); }
+
+    private static string GetCropEmoji(string slug) => slug switch
+    {
+        "apple" => "🍎", "pear" => "🍐",
+        "cherry-sweet" or "cherry-sour" => "🍒",
+        "peach" or "nectarine" => "🍑",
+        "grape-wine" or "grape-table" => "🍇",
+        "strawberry" => "🍓", "blueberry" => "🫐",
+        "tomato" => "🍅", "corn-sweet" or "corn-field" => "🌽",
+        "wheat" or "alfalfa" => "🌾",
+        "walnut" or "almond" or "hazelnut" or "pecan" => "🌰",
+        _ => "🌱"
+    };
+
+    private class CalendarCell
+    {
+        public DateOnly Date { get; set; }
+        public bool OtherMonth { get; set; }
+        public bool IsToday { get; set; }
+        public List<string> Tasks { get; set; } = new();
+    }
+}

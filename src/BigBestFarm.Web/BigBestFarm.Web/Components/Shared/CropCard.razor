@@ -1,0 +1,84 @@
+<div class="card bbf-crop-card h-100 @(Advisory != null ? GetAdvisoryBorderClass() : "")">
+    <div class="card-body">
+        <div class="d-flex justify-content-between align-items-start mb-2">
+            <div>
+                <h6 class="card-title mb-0">@Crop.Name</h6>
+                <div class="small text-muted">@Crop.Category</div>
+            </div>
+            <span class="fs-2">@GetCropEmoji()</span>
+        </div>
+
+        @if (Advisory != null)
+        {
+            <div class="d-flex align-items-center gap-2 mb-2">
+                <span class="badge @GetAdvisoryBadgeClass()">@Advisory.Status</span>
+                <span class="small text-muted">@Advisory.ActionType</span>
+            </div>
+            <p class="card-text small text-muted mb-2">@TruncateReasoning(Advisory.Reasoning)</p>
+        }
+
+        <div class="d-flex gap-1 flex-wrap">
+            @foreach (var action in Crop.Actions.Where(a => a.IsEnabled).Take(4))
+            {
+                <span class="badge bg-secondary-subtle text-secondary-emphasis">@GetActionIcon(action.ActionType)</span>
+            }
+        </div>
+    </div>
+    <div class="card-footer p-1">
+        <a href="/crop/@Crop.Slug" class="btn btn-sm btn-outline-primary w-100">View Advisory</a>
+    </div>
+</div>
+
+@code {
+    [Parameter, EditorRequired] public Crop Crop { get; set; } = default!;
+    [Parameter] public CropAdvisory? Advisory { get; set; }
+
+    private string GetAdvisoryBorderClass() => Advisory?.Status switch
+    {
+        AdvisoryStatus.Recommended => "border-success",
+        AdvisoryStatus.Acceptable => "border-info",
+        AdvisoryStatus.Caution => "border-warning",
+        AdvisoryStatus.NotRecommended => "border-danger",
+        _ => ""
+    };
+
+    private string GetAdvisoryBadgeClass() => Advisory?.Status switch
+    {
+        AdvisoryStatus.Recommended => "bg-success",
+        AdvisoryStatus.Acceptable => "bg-info text-dark",
+        AdvisoryStatus.Caution => "bg-warning text-dark",
+        AdvisoryStatus.NotRecommended => "bg-danger",
+        _ => "bg-secondary"
+    };
+
+    private string GetCropEmoji() => Crop.Slug switch
+    {
+        "apple" => "🍎",
+        "pear" => "🍐",
+        "cherry-sweet" or "cherry-sour" => "🍒",
+        "peach" or "nectarine" => "🍑",
+        "grape-wine" or "grape-table" => "🍇",
+        "strawberry" => "🍓",
+        "blueberry" => "🫐",
+        "tomato" => "🍅",
+        "corn-sweet" or "corn-field" => "🌽",
+        "wheat" or "alfalfa" => "🌾",
+        "walnut" or "almond" or "hazelnut" or "pecan" => "🌰",
+        _ => "🌱"
+    };
+
+    private static string GetActionIcon(ActionType action) => action switch
+    {
+        ActionType.Spray => "💧",
+        ActionType.Fertilize => "🧪",
+        ActionType.Till => "🚜",
+        ActionType.Groom => "✂️",
+        ActionType.Irrigate => "🚿",
+        ActionType.Harvest => "🧺",
+        ActionType.Clean => "🧹",
+        _ => "•"
+    };
+
+    private static string TruncateReasoning(string text, int max = 80) =>
+        text.Length > max ? text[..max] + "…" : text;
+}

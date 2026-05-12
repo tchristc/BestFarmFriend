@@ -1,0 +1,96 @@
+@inject BigBestFarm.Web.Services.AppState AppState
+
+@if (Weather != null)
+{
+    <div class="card bbf-weather-card h-100">
+        <div class="card-body">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <div class="bbf-temp-display">@Weather.TemperatureF.ToString("F0")°F</div>
+                    <div class="text-muted small">Feels like @Weather.FeelsLikeF.ToString("F0")°F</div>
+                    <div class="fw-semibold mt-1">@AppState.ConditionDisplayName(Weather.Condition)</div>
+                    <div class="small text-muted">H: @Weather.DailyHighF.ToString("F0")° / L: @Weather.DailyLowF.ToString("F0")°</div>
+                </div>
+                <WeatherIcon Condition="Weather.Condition" CssClass="bbf-icon-lg" />
+            </div>
+
+            <hr class="my-2" />
+
+            <div class="row g-2 small">
+                <div class="col-6">
+                    <div class="bbf-metric-box">
+                        <span class="bbf-metric-label">💨 Wind</span>
+                        <span class="bbf-metric-value">
+                            @Weather.WindSpeedMph.ToString("F0") mph @AppState.WindDirectionLabel(Weather.WindDirectionDeg)
+                            @if (Weather.WindGustMph > Weather.WindSpeedMph + 3)
+                            {
+                                <span class="text-warning"> (G @Weather.WindGustMph.ToString("F0"))</span>
+                            }
+                        </span>
+                    </div>
+                </div>
+                <div class="col-6">
+                    <div class="bbf-metric-box">
+                        <span class="bbf-metric-label">💧 Humidity</span>
+                        <span class="bbf-metric-value">@Weather.HumidityPct.ToString("F0")%</span>
+                    </div>
+                </div>
+                <div class="col-6">
+                    <div class="bbf-metric-box">
+                        <span class="bbf-metric-label">🌡️ Dew Point</span>
+                        <span class="bbf-metric-value">@Weather.DewPointF.ToString("F0")°F</span>
+                    </div>
+                </div>
+                <div class="col-6">
+                    <div class="bbf-metric-box">
+                        <span class="bbf-metric-label">📊 Pressure</span>
+                        <span class="bbf-metric-value">
+                            @Weather.PressureHpa.ToString("F0") hPa
+                            @(Weather.PressureTrend == PressureTrend.Rising ? "↑" :
+                              Weather.PressureTrend == PressureTrend.Falling ? "↓" : "→")
+                        </span>
+                    </div>
+                </div>
+                <div class="col-6">
+                    <div class="bbf-metric-box">
+                        <span class="bbf-metric-label">🌧️ Precip 1h</span>
+                        <span class="bbf-metric-value">@Weather.PrecipPast1hIn.ToString("F2")"</span>
+                    </div>
+                </div>
+                <div class="col-6">
+                    <div class="bbf-metric-box">
+                        <span class="bbf-metric-label">☀️ UV Index</span>
+                        <span class="bbf-metric-value">@Weather.UvIndex.ToString("F0")</span>
+                    </div>
+                </div>
+                <div class="col-6">
+                    <div class="bbf-metric-box">
+                        <span class="bbf-metric-label">🌅 Sunrise</span>
+                        <span class="bbf-metric-value">@Weather.SunriseUtc.ToLocalTime().ToString("h:mm tt")</span>
+                    </div>
+                </div>
+                <div class="col-6">
+                    <div class="bbf-metric-box">
+                        <span class="bbf-metric-label">🌇 Sunset</span>
+                        <span class="bbf-metric-value">@Weather.SunsetUtc.ToLocalTime().ToString("h:mm tt")</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+else
+{
+    <div class="card bbf-weather-card h-100">
+        <div class="card-body d-flex align-items-center justify-content-center text-muted">
+            <div class="text-center">
+                <div class="spinner-border spinner-border-sm mb-2" role="status"></div>
+                <div>Loading weather…</div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public WeatherSnapshot? Weather { get; set; }
+}

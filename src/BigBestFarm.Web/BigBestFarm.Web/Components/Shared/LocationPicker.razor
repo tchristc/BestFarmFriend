@@ -1,0 +1,132 @@
+@inject IGeocodingService GeocodingService
+@inject BigBestFarm.Web.Services.AppState AppState
+@inject ILocationRepository LocationRepo
+@inject NavigationManager Nav
+@implements IDisposable
+@rendermode InteractiveServer
+
+<div class="bbf-location-picker d-flex align-items-center gap-1">
+    <div class="dropdown">
+        <button class="btn btn-sm btn-light text-dark dropdown-toggle" type="button"
+                id="locationDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+            📍 @(AppState.CurrentLocation?.DisplayName ?? "Set location")
+        </button>
+        <div class="dropdown-menu dropdown-menu-end p-2" style="min-width:300px"
+             aria-labelledby="locationDropdown">
+
+            @* Favorites first *@
+            @{ var favorites = SavedLocations.Where(l => l.IsFavorite).ToList(); }
+            @if (favorites.Count > 0)
+            {
+                <div class="small text-muted mb-1 px-1 fw-semibold">⭐ Favorites</div>
+                <div class="list-group list-group-flush mb-2">
+                    @foreach (var loc in favorites)
+                    {
+                        <button type="button"
+                                class="list-group-item list-group-item-action py-1 small @(loc.Id == AppState.CurrentLocation?.Id ? "active" : "")"
+                                @onclick="() => SelectLocation(loc)">
+                            @loc.DisplayName
+                        </button>
+                    }
+                </div>
+            }
+
+            @* Recent locations (non-favorite, sorted by last used) *@
+            @{ var recents = SavedLocations.Where(l => !l.IsFavorite).OrderByDescending(l => l.LastUsed).Take(5).ToList(); }
+            @if (recents.Count > 0)
+            {
+                <div class="small text-muted mb-1 px-1 fw-semibold">🕐 Recent</div>
+                <div class="list-group list-group-flush mb-2">
+                    @foreach (var loc in recents)
+                    {
+                        <button type="button"
+                                class="list-group-item list-group-item-action py-1 small @(loc.Id == AppState.CurrentLocation?.Id ? "active" : "")"
+                                @onclick="() => SelectLocation(loc)">
+                            @loc.DisplayName
+                        </button>
+                    }
+                </div>
+            }
+
+            <hr class="my-1" />
+
+            @* Search *@
+            <div class="mb-2">
+                <input type="text" class="form-control form-control-sm"
+                       placeholder="Search city or ZIP..."
+                       value="@SearchQuery"
+                       @oninput="OnSearchInput" />
+            </div>
+            @if (SearchResults.Count > 0)
+            {
+                <div class="list-group list-group-flush mb-2">
+                    @foreach (var loc in SearchResults)
+                    {
+                        <button type="button" class="list-group-item list-group-item-action py-1 small"
+                                @onclick="() => SelectLocation(loc)">
+                            📍 @loc.DisplayName
+                        </button>
+                    }
+                </div>
+            }
+
+            <hr class="my-1" />
+            <a class="btn btn-sm btn-link w-100 text-start" href="/settings">⚙️ Manage locations</a>
+        </div>
+    </div>
+</div>
+
+@code {
+    private string SearchQuery { get; set; } = string.Empty;
+    private List<Location> SearchResults { get; set; } = new();
+    private List<Location> SavedLocations { get; set; } = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        AppState.OnLocationChanged += OnLocationChangedHandler;
+        await RefreshSavedLocations();
+    }
+
+    private async Task RefreshSavedLocations()
+    {
+        SavedLocations = await LocationRepo.GetAllAsync();
+        if (AppState.CurrentLocation == null && SavedLocations.Count > 0)
+            AppState.CurrentLocation = SavedLocations.OrderByDescending(l => l.LastUsed).First();
+    }
+
+    private void OnLocationChangedHandler()
+    {
+        InvokeAsync(StateHasChanged);
+    }
+
+    private async Task OnSearchInput(ChangeEventArgs e)
+    {
+        SearchQuery = e.Value?.ToString() ?? string.Empty;
+        if (SearchQuery.Length >= 2)
+            SearchResults = await GeocodingService.SearchAsync(SearchQuery);
+        else
+            SearchResults.Clear();
+    }
+
+    private async Task SelectLocation(Location loc)
+    {
+        loc.LastUsed = DateTime.UtcNow;
+        if (loc.Id == 0)
+        {
+            loc = await LocationRepo.AddAsync(loc);
+        }
+        else
+        {
+            await LocationRepo.UpdateAsync(loc);
+        }
+        await RefreshSavedLocations();
+        AppState.CurrentLocation = loc;
+        SearchResults.Clear();
+        SearchQuery = string.Empty;
+    }
+
+    public void Dispose()
+    {
+        AppState.OnLocationChanged -= OnLocationChangedHandler;
+    }
+}

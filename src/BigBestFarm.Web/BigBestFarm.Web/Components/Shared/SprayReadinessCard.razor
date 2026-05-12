@@ -1,0 +1,72 @@
+@if (SprayResult != null)
+{
+    <div class="card bbf-spray-card h-100">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h6 class="mb-0">💧 Spray Readiness</h6>
+            <a href="/spray" class="btn btn-sm btn-outline-secondary">Details</a>
+        </div>
+        <div class="card-body">
+            <div class="d-flex align-items-center gap-3 mb-3">
+                <div class="bbf-score-circle @SprayResult.BandCssClass">
+                    <span class="bbf-score-num">@SprayResult.Score.ToString("F0")</span>
+                    <span class="bbf-score-label">/ 100</span>
+                </div>
+                <div>
+                    <div class="fs-5 fw-bold @GetBandTextClass(SprayResult.Band)">@SprayResult.BandLabel</div>
+                    <div class="small text-muted">@SprayResult.EvaluatedAt.ToLocalTime().ToString("h:mm tt")</div>
+                </div>
+            </div>
+
+            @foreach (var factor in SprayResult.FactorResults)
+            {
+                <div class="d-flex justify-content-between align-items-center mb-1 small">
+                    <span>@GetFactorIcon(factor.Factor) @factor.Factor</span>
+                    <span class="d-flex align-items-center gap-1">
+                        <span class="text-muted me-1">@factor.CurrentValue</span>
+                        <span class="badge @GetStatusBadgeClass(factor.Status)">@factor.Status</span>
+                    </span>
+                </div>
+            }
+
+            @if (SprayResult.FactorResults.Any(f => f.Status != FactorStatus.Pass))
+            {
+                <hr class="my-2" />
+                @foreach (var f in SprayResult.FactorResults.Where(f => f.Status != FactorStatus.Pass))
+                {
+                    <div class="small text-muted mb-1">⚠️ @f.Reason</div>
+                }
+            }
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public SprayReadinessResult? SprayResult { get; set; }
+
+    private static string GetBandTextClass(SprayBand band) => band switch
+    {
+        SprayBand.Go => "text-success",
+        SprayBand.Caution => "text-warning",
+        SprayBand.Marginal => "text-orange",
+        SprayBand.NoGo => "text-danger",
+        _ => ""
+    };
+
+    private static string GetStatusBadgeClass(FactorStatus status) => status switch
+    {
+        FactorStatus.Pass => "bg-success",
+        FactorStatus.Marginal => "bg-warning text-dark",
+        FactorStatus.Fail => "bg-danger",
+        _ => "bg-secondary"
+    };
+
+    private static string GetFactorIcon(SprayFactor factor) => factor switch
+    {
+        SprayFactor.Wind => "💨",
+        SprayFactor.Precipitation => "🌧️",
+        SprayFactor.Temperature => "🌡️",
+        SprayFactor.Humidity => "💧",
+        SprayFactor.TimeOfDay => "🕐",
+        _ => "•"
+    };
+}

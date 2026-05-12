@@ -1,0 +1,26 @@
+@if (Forecast.Count > 0)
+{
+    <div class="bbf-hourly-strip d-flex gap-2 overflow-x-auto pb-2">
+        @foreach (var hour in Forecast.Take(24))
+        {
+            <div class="bbf-hourly-item flex-shrink-0 text-center">
+                <div class="small text-muted">@hour.Time.ToLocalTime().ToString("h tt")</div>
+                <WeatherIcon Condition="hour.Condition" CssClass="bbf-icon-sm" />
+                <div class="fw-semibold small">@hour.TemperatureF.ToString("F0")°</div>
+                @if (hour.PrecipitationProbabilityPct > 0)
+                {
+                    <div class="small text-primary">@hour.PrecipitationProbabilityPct.ToString("F0")%</div>
+                }
+                else
+                {
+                    <div class="small text-muted">—</div>
+                }
+                <div class="small text-muted">@hour.WindSpeedMph.ToString("F0")mph</div>
+            </div>
+        }
+    </div>
+}
+
+@code {
+    [Parameter] public List<WeatherForecastHour> Forecast { get; set; } = new();
+}

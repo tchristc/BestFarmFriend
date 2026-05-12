@@ -1,0 +1,119 @@
+@* Animated SVG Weather Icon based on WMO weather code *@
+
+<div class="bbf-weather-icon @CssClass" title="@Condition.ToString()">
+    @switch (Condition)
+    {
+        case WeatherCondition.ClearSky:
+        case WeatherCondition.MainlyClear:
+            <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="50" cy="50" r="20" fill="#FFD700" class="bbf-sun-pulse">
+                    <animate attributeName="r" values="18;22;18" dur="3s" repeatCount="indefinite" />
+                </circle>
+                @foreach (var angle in new[] { 0, 45, 90, 135, 180, 225, 270, 315 })
+                {
+                    double rad = angle * Math.PI / 180;
+                    double x1 = 50 + 26 * Math.Cos(rad);
+                    double y1 = 50 + 26 * Math.Sin(rad);
+                    double x2 = 50 + 36 * Math.Cos(rad);
+                    double y2 = 50 + 36 * Math.Sin(rad);
+                    <line x1="@x1.ToString("F1")" y1="@y1.ToString("F1")"
+                          x2="@x2.ToString("F1")" y2="@y2.ToString("F1")"
+                          stroke="#FFD700" stroke-width="3" stroke-linecap="round" />
+                }
+            </svg>
+            break;
+
+        case WeatherCondition.PartlyCloudy:
+            <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="38" cy="42" r="15" fill="#FFD700" />
+                <ellipse cx="55" cy="60" rx="22" ry="14" fill="white" stroke="#ddd" stroke-width="1" />
+                <ellipse cx="38" cy="64" rx="15" ry="11" fill="white" stroke="#ddd" stroke-width="1" />
+                <ellipse cx="68" cy="64" rx="14" ry="10" fill="white" stroke="#ddd" stroke-width="1" />
+            </svg>
+            break;
+
+        case WeatherCondition.Overcast:
+            <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                <ellipse cx="50" cy="55" rx="30" ry="18" fill="#B0BEC5" />
+                <ellipse cx="35" cy="58" rx="20" ry="14" fill="#B0BEC5" />
+                <ellipse cx="65" cy="58" rx="20" ry="14" fill="#B0BEC5" />
+                <ellipse cx="50" cy="48" rx="22" ry="14" fill="#CFD8DC" />
+            </svg>
+            break;
+
+        case WeatherCondition.Rain:
+        case WeatherCondition.Drizzle:
+            <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                <ellipse cx="50" cy="42" rx="28" ry="16" fill="#78909C" />
+                <ellipse cx="35" cy="46" rx="18" ry="12" fill="#78909C" />
+                <ellipse cx="65" cy="46" rx="18" ry="12" fill="#78909C" />
+                @foreach (var (x, delay) in new[] { (35, "0s"), (50, "0.3s"), (65, "0.6s"), (42, "0.15s"), (57, "0.45s") })
+                {
+                    <line x1="@x" y1="62" x2="@(x - 4)" y2="75" stroke="#1E88E5" stroke-width="2.5" stroke-linecap="round">
+                        <animate attributeName="opacity" values="1;0;1" dur="1.2s" begin="@delay" repeatCount="indefinite" />
+                    </line>
+                }
+            </svg>
+            break;
+
+        case WeatherCondition.HeavyRain:
+            <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                <ellipse cx="50" cy="38" rx="28" ry="16" fill="#546E7A" />
+                <ellipse cx="33" cy="43" rx="18" ry="12" fill="#546E7A" />
+                <ellipse cx="67" cy="43" rx="18" ry="12" fill="#546E7A" />
+                @foreach (var (x, delay) in new[] { (30, "0s"), (40, "0.1s"), (50, "0.2s"), (60, "0.15s"), (70, "0.05s"), (35, "0.25s"), (55, "0.3s") })
+                {
+                    <line x1="@x" y1="60" x2="@(x - 5)" y2="78" stroke="#1565C0" stroke-width="2.5" stroke-linecap="round">
+                        <animate attributeName="opacity" values="1;0;1" dur="0.8s" begin="@delay" repeatCount="indefinite" />
+                    </line>
+                }
+            </svg>
+            break;
+
+        case WeatherCondition.Thunderstorm:
+            <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                <ellipse cx="50" cy="35" rx="30" ry="17" fill="#37474F" />
+                <ellipse cx="33" cy="40" rx="19" ry="13" fill="#37474F" />
+                <ellipse cx="67" cy="40" rx="19" ry="13" fill="#37474F" />
+                <polygon points="52,53 44,68 50,68 46,82 58,62 51,62" fill="#FFD600">
+                    <animate attributeName="opacity" values="1;0.4;1" dur="1.5s" repeatCount="indefinite" />
+                </polygon>
+            </svg>
+            break;
+
+        case WeatherCondition.Snow:
+            <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                <ellipse cx="50" cy="40" rx="28" ry="16" fill="#B0BEC5" />
+                <ellipse cx="35" cy="44" rx="18" ry="12" fill="#B0BEC5" />
+                <ellipse cx="65" cy="44" rx="18" ry="12" fill="#B0BEC5" />
+                @((MarkupString)"<text x=\"35\" y=\"62\" text-anchor=\"middle\" font-size=\"10\" fill=\"#90CAF9\">❄<animate attributeName=\"opacity\" values=\"1;0.3;1\" dur=\"2s\" begin=\"0s\" repeatCount=\"indefinite\" /></text>")
+                @((MarkupString)"<text x=\"50\" y=\"58\" text-anchor=\"middle\" font-size=\"10\" fill=\"#90CAF9\">❄<animate attributeName=\"opacity\" values=\"1;0.3;1\" dur=\"2s\" begin=\"0.4s\" repeatCount=\"indefinite\" /></text>")
+                @((MarkupString)"<text x=\"65\" y=\"62\" text-anchor=\"middle\" font-size=\"10\" fill=\"#90CAF9\">❄<animate attributeName=\"opacity\" values=\"1;0.3;1\" dur=\"2s\" begin=\"0.8s\" repeatCount=\"indefinite\" /></text>")
+                @((MarkupString)"<text x=\"42\" y=\"72\" text-anchor=\"middle\" font-size=\"10\" fill=\"#90CAF9\">❄<animate attributeName=\"opacity\" values=\"1;0.3;1\" dur=\"2s\" begin=\"0.2s\" repeatCount=\"indefinite\" /></text>")
+                @((MarkupString)"<text x=\"57\" y=\"70\" text-anchor=\"middle\" font-size=\"10\" fill=\"#90CAF9\">❄<animate attributeName=\"opacity\" values=\"1;0.3;1\" dur=\"2s\" begin=\"0.6s\" repeatCount=\"indefinite\" /></text>")
+            </svg>
+            break;
+
+        case WeatherCondition.Fog:
+            <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                @foreach (var (y, w, delay) in new[] { (40, 60, "0s"), (52, 50, "0.5s"), (64, 55, "1s"), (76, 45, "0.3s") })
+                {
+                    <line x1="@(50 - w/2)" y1="@y" x2="@(50 + w/2)" y2="@y" stroke="#B0BEC5" stroke-width="6" stroke-linecap="round">
+                        <animate attributeName="opacity" values="0.8;0.3;0.8" dur="3s" begin="@delay" repeatCount="indefinite" />
+                    </line>
+                }
+            </svg>
+            break;
+
+        default:
+            <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                <ellipse cx="50" cy="55" rx="28" ry="16" fill="#90A4AE" />
+            </svg>
+            break;
+    }
+</div>
+
+@code {
+    [Parameter] public WeatherCondition Condition { get; set; }
+    [Parameter] public string CssClass { get; set; } = "";
+}

@@ -1,0 +1,78 @@
+@page "/crops"
+@rendermode InteractiveServer
+@inject ICropRepository CropRepo
+@inject IWeatherService WeatherService
+@inject ICropAdvisoryService AdvisoryService
+@inject BigBestFarm.Web.Services.AppState AppState
+@inject NavigationManager Nav
+
+<PageTitle>My Crops — BigBestFarm</PageTitle>
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h4 class="mb-0">🌱 My Crops</h4>
+    <div class="d-flex gap-2">
+        <select class="form-select form-select-sm" style="width:auto" @bind="_filterCategory">
+            <option value="">All Categories</option>
+            @foreach (var cat in Enum.GetValues<CropCategory>())
+            {
+                <option value="@cat">@cat</option>
+            }
+        </select>
+        <div class="form-check form-switch mb-0 d-flex align-items-center gap-2">
+            <input class="form-check-input" type="checkbox" id="activeOnly" @bind="_activeOnly" />
+            <label class="form-check-label small" for="activeOnly">Active only</label>
+        </div>
+    </div>
+</div>
+
+@if (_loading)
+{
+    <div class="bbf-crop-grid">
+        @for (int i = 0; i < 6; i++)
+        {
+            <div class="bbf-skeleton" style="height:180px"></div>
+        }
+    </div>
+}
+else
+{
+    var filtered = _allCrops
+        .Where(c => (!_activeOnly || c.IsActive)
+                 && (_filterCategory == "" || c.Category.ToString() == _filterCategory))
+        .ToList();
+
+    @if (filtered.Count == 0)
+    {
+        <div class="text-center text-muted py-5">No crops match the filter.</div>
+    }
+    else
+    {
+        <div class="bbf-crop-grid">
+            @foreach (var crop in filtered)
+            {
+                var advisory = _advisories.FirstOrDefault(a => a.CropId == crop.Id);
+                <CropCard Crop="crop" Advisory="advisory" />
+            }
+        </div>
+    }
+}
+
+@code {
+    private List<Crop> _allCrops = new();
+    private List<CropAdvisory> _advisories = new();
+    private bool _loading = true;
+    private bool _activeOnly = true;
+    private string _filterCategory = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        _allCrops = await CropRepo.GetAllAsync();
+        if (AppState.CurrentLocation != null)
+        {
+            var weather = await WeatherService.GetCurrentWeatherAsync(AppState.CurrentLocation);
+            if (weather != null)
+                _advisories = await AdvisoryService.GetAdvisoriesAsync(weather, _allCrops);
+        }
+        _loading = false;
+    }
+}
