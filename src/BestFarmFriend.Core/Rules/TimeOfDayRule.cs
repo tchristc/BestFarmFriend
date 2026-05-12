@@ -4,11 +4,12 @@ namespace BestFarmFriend.Core.Rules;
 
 public static class TimeOfDayRule
 {
-    public static SprayFactorResult Evaluate(DateTime now, DateTime sunriseUtc, DateTime sunsetUtc)
+    public static SprayFactorResult Evaluate(DateTime now, DateTime sunriseUtc, DateTime sunsetUtc, string locationTimeZone = "")
     {
-        var localNow = now.ToLocalTime();
-        var localSunrise = sunriseUtc.ToLocalTime();
-        var localSunset = sunsetUtc.ToLocalTime();
+        var tzi = GetTimeZoneInfo(locationTimeZone);
+        var localNow     = TimeZoneInfo.ConvertTimeFromUtc(now.Kind == DateTimeKind.Utc ? now : now.ToUniversalTime(), tzi);
+        var localSunrise = TimeZoneInfo.ConvertTimeFromUtc(sunriseUtc.Kind == DateTimeKind.Utc ? sunriseUtc : sunriseUtc.ToUniversalTime(), tzi);
+        var localSunset  = TimeZoneInfo.ConvertTimeFromUtc(sunsetUtc.Kind == DateTimeKind.Utc ? sunsetUtc : sunsetUtc.ToUniversalTime(), tzi);
 
         var idealStart = localSunrise.AddHours(1);
         var idealEnd = localSunset.AddHours(-2);
@@ -53,5 +54,14 @@ public static class TimeOfDayRule
             Score = 100,
             Reason = "Ideal spray window (1 hr after sunrise to 2 hrs before sunset)."
         };
+    }
+
+    private static TimeZoneInfo GetTimeZoneInfo(string? tz)
+    {
+        if (!string.IsNullOrWhiteSpace(tz))
+        {
+            try { return TimeZoneInfo.FindSystemTimeZoneById(tz); } catch { }
+        }
+        return TimeZoneInfo.Local;
     }
 }

@@ -4,7 +4,7 @@ namespace BestFarmFriend.Infrastructure.WeatherApi;
 
 public static class WeatherMapper
 {
-    public static WeatherSnapshot Map(OpenMeteoCurrentResponse response, double latitude, double longitude)
+    public static WeatherSnapshot Map(OpenMeteoCurrentResponse response, double latitude, double longitude, string locationTimeZone = "")
     {
         var current = response.Current ?? new OpenMeteoCurrent();
         var daily = response.Daily;
@@ -43,7 +43,8 @@ public static class WeatherMapper
             VisibilityMiles = current.Visibility / 1609.34,
             Condition = MapWeatherCode(current.WeatherCode),
             SunriseUtc = sunriseUtc,
-            SunsetUtc = sunsetUtc
+            SunsetUtc = sunsetUtc,
+            LocationTimeZone = locationTimeZone
         };
 
         if (response.Hourly != null)

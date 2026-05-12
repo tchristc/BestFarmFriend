@@ -18,13 +18,11 @@
 }
 else
 {
-    <div class="bbf-hero py-3 px-2 d-flex justify-content-between align-items-center">
-        <div>
-            <h4 class="mb-0 fw-bold">📍 @AppState.CurrentLocation.DisplayName</h4>
-        </div>
-        <div class="text-end">
+    <div class="bbf-hero py-3 px-2 d-flex justify-content-between align-items-center gap-3 flex-wrap">
+        <h4 class="mb-0 fw-bold text-nowrap overflow-hidden" style="text-overflow:ellipsis; min-width:0;">📍 @AppState.CurrentLocation.DisplayName</h4>
+        <div class="text-end flex-shrink-0">
             <div class="fw-bold" style="font-size:1.4rem; letter-spacing:0.05em; font-variant-numeric:tabular-nums;">@_clock</div>
-            <div class="opacity-75 small">@_date</div>
+            <div class="opacity-75 small text-nowrap">@_date</div>
         </div>
     </div>
 
@@ -97,23 +95,9 @@ else
     private string _date = string.Empty;
     private Timer? _timer;
 
-    private DateTime LocationNow()
-    {
-        if (AppState.CurrentLocation?.Timezone is { Length: > 0 } tz)
-        {
-            try
-            {
-                var tzi = TimeZoneInfo.FindSystemTimeZoneById(tz);
-                return TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, tzi);
-            }
-            catch { }
-        }
-        return DateTime.Now;
-    }
-
     private void UpdateClock()
     {
-        var now = LocationNow();
+        var now = AppState.LocationNow();
         _clock = now.ToString("h:mm tt");
         _date  = now.ToString("dddd, MMMM d, yyyy");
     }

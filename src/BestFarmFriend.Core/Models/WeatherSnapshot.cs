@@ -35,6 +35,9 @@ public class WeatherSnapshot
     public double VisibilityMiles { get; set; }
     public WeatherCondition Condition { get; set; }
 
+    // Location timezone (IANA, e.g. "America/Chicago")
+    public string LocationTimeZone { get; set; } = string.Empty;
+
     // Sun
     public DateTime SunriseUtc { get; set; }
     public DateTime SunsetUtc { get; set; }

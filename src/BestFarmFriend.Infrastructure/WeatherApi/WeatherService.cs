@@ -21,8 +21,13 @@ public class WeatherService : IWeatherService
         _logger = logger;
     }
 
-    public Task<WeatherSnapshot?> GetCurrentWeatherAsync(Location location, CancellationToken ct = default) =>
-        GetCurrentWeatherAsync(location.Latitude, location.Longitude, ct);
+    public async Task<WeatherSnapshot?> GetCurrentWeatherAsync(Location location, CancellationToken ct = default)
+    {
+        var snapshot = await GetCurrentWeatherAsync(location.Latitude, location.Longitude, ct);
+        if (snapshot != null && string.IsNullOrEmpty(snapshot.LocationTimeZone))
+            snapshot.LocationTimeZone = location.Timezone;
+        return snapshot;
+    }
 
     public async Task<WeatherSnapshot?> GetCurrentWeatherAsync(double latitude, double longitude, CancellationToken ct = default)
     {

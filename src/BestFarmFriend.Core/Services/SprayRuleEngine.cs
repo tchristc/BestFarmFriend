@@ -29,7 +29,7 @@ public class SprayRuleEngine : ISprayRuleEngine
         var precipResult = PrecipitationRule.Evaluate(weather.PrecipPast1hIn, precipPast2h, forecastNext1h, forecastNext4h);
         var tempResult = TemperatureRule.Evaluate(weather.TemperatureF);
         var humidityResult = HumidityRule.Evaluate(weather.HumidityPct, weather.TemperatureF, weather.DewPointF);
-        var timeResult = TimeOfDayRule.Evaluate(now, weather.SunriseUtc, weather.SunsetUtc);
+        var timeResult = TimeOfDayRule.Evaluate(now, weather.SunriseUtc, weather.SunsetUtc, weather.LocationTimeZone);
 
         // Weighted score
         double score =

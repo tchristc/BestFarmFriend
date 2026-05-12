@@ -22,6 +22,22 @@ public class AppState
     public event Action? OnLocationChanged;
     public event Action? OnSettingsChanged;
 
+    public DateTime LocationNow()
+    {
+        var tz = _currentLocation?.Timezone;
+        if (!string.IsNullOrWhiteSpace(tz))
+        {
+            try
+            {
+                return TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, TimeZoneInfo.FindSystemTimeZoneById(tz));
+            }
+            catch { }
+        }
+        return DateTime.Now;
+    }
+
+    public DateOnly LocationToday() => DateOnly.FromDateTime(LocationNow());
+
     public string WindDirectionLabel(double degrees)
     {
         string[] dirs = ["N", "NNE", "NE", "ENE", "E", "ESE", "SE", "SSE",

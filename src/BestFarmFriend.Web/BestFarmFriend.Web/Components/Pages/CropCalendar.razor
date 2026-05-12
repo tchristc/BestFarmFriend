@@ -93,7 +93,7 @@ else
 @code {
     private List<Crop> _crops = new();
     private int _selectedCropId;
-    private DateOnly _viewDate = DateOnly.FromDateTime(DateTime.Today);
+    private DateOnly _viewDate = DateOnly.FromDateTime(DateTime.UtcNow);
     private GrowthStageCode _currentStage;
     private List<CalendarCell> _calendarCells = new();
 
@@ -101,6 +101,7 @@ else
 
     protected override async Task OnInitializedAsync()
     {
+        _viewDate = AppState.LocationToday();
         _crops = await CropRepo.GetActiveCropsAsync();
         if (_crops.Count > 0)
         {
@@ -116,12 +117,12 @@ else
         var crop = _selectedCrop;
         if (crop == null) return;
 
-        _currentStage = GrowthStageService.EstimateCurrentStage(crop, DateOnly.FromDateTime(DateTime.Today));
+        _currentStage = GrowthStageService.EstimateCurrentStage(crop, AppState.LocationToday());
 
         var firstDay = new DateOnly(_viewDate.Year, _viewDate.Month, 1);
         var startOffset = (int)firstDay.DayOfWeek;
         var daysInMonth = DateTime.DaysInMonth(_viewDate.Year, _viewDate.Month);
-        var today = DateOnly.FromDateTime(DateTime.Today);
+        var today = AppState.LocationToday();
 
         _calendarCells = new();
         for (int i = 0; i < startOffset; i++)
@@ -149,7 +150,7 @@ else
 
     private void PrevMonth() { _viewDate = _viewDate.AddMonths(-1); BuildCalendar(); }
     private void NextMonth() { _viewDate = _viewDate.AddMonths(1);  BuildCalendar(); }
-    private void GoToday()   { _viewDate = DateOnly.FromDateTime(DateTime.Today); BuildCalendar(); }
+    private void GoToday()   { _viewDate = AppState.LocationToday(); BuildCalendar(); }
 
     private static string GetCropEmoji(string slug) => slug switch
     {
