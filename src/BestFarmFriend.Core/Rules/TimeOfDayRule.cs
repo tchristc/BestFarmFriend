@@ -1,4 +1,5 @@
 ﻿using BestFarmFriend.Core.Models;
+using TimeZoneConverter;
 
 namespace BestFarmFriend.Core.Rules;
 
@@ -60,7 +61,7 @@ public static class TimeOfDayRule
     {
         if (!string.IsNullOrWhiteSpace(tz))
         {
-            try { return TimeZoneInfo.FindSystemTimeZoneById(tz); } catch { }
+            try { return TZConvert.GetTimeZoneInfo(tz); } catch { }
         }
         return TimeZoneInfo.Local;
     }

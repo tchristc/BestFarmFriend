@@ -1,4 +1,5 @@
 ﻿using BestFarmFriend.Core.Models;
+using TimeZoneConverter;
 
 namespace BestFarmFriend.Web.Services;
 
@@ -29,7 +30,7 @@ public class AppState
         {
             try
             {
-                return TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, TimeZoneInfo.FindSystemTimeZoneById(tz));
+                return TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, TZConvert.GetTimeZoneInfo(tz));
             }
             catch { }
         }
