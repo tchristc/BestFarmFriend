@@ -3,6 +3,7 @@ using BestFarmFriend.Infrastructure.Data;
 using BestFarmFriend.Infrastructure.Data.Seed;
 using BestFarmFriend.Web.Components;
 using BestFarmFriend.Web.Services;
+using Microsoft.EntityFrameworkCore;
 using Serilog;
 
 Log.Logger = new LoggerConfiguration()
@@ -30,7 +31,57 @@ var app = builder.Build();
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    db.Database.EnsureCreated();
+
+    // If the database already exists (created via EnsureCreated before migrations were introduced)
+    // but has no migrations history, insert the InitialCreate migration as already applied so
+    // MigrateAsync only applies newer migrations (e.g. schema changes like Timezone column).
+    var conn = db.Database.GetDbConnection();
+    await conn.OpenAsync();
+    bool hasMigrationsTable;
+    await using (var cmd = conn.CreateCommand())
+    {
+        cmd.CommandText = "SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name='__EFMigrationsHistory'";
+        hasMigrationsTable = (long)(await cmd.ExecuteScalarAsync())! > 0;
+    }
+    if (!hasMigrationsTable)
+    {
+        await using (var cmd = conn.CreateCommand())
+        {
+            cmd.CommandText = "CREATE TABLE \"__EFMigrationsHistory\" (\"MigrationId\" TEXT NOT NULL CONSTRAINT \"PK___EFMigrationsHistory\" PRIMARY KEY, \"ProductVersion\" TEXT NOT NULL)";
+            await cmd.ExecuteNonQueryAsync();
+        }
+        // Check if tables already exist (pre-migration database)
+        bool tablesExist;
+        await using (var cmd = conn.CreateCommand())
+        {
+            cmd.CommandText = "SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name='Locations'";
+            tablesExist = (long)(await cmd.ExecuteScalarAsync())! > 0;
+        }
+        if (tablesExist)
+        {
+            // Mark InitialCreate as already applied so MigrateAsync skips it
+            await using var cmd = conn.CreateCommand();
+            cmd.CommandText = "INSERT INTO \"__EFMigrationsHistory\" (\"MigrationId\", \"ProductVersion\") VALUES ('20260512231721_InitialCreate', '10.0.7')";
+            await cmd.ExecuteNonQueryAsync();
+
+            // Add Timezone column if it doesn't exist in this pre-migration database
+            bool timezoneExists;
+            await using (var checkCmd = conn.CreateCommand())
+            {
+                checkCmd.CommandText = "SELECT COUNT(*) FROM pragma_table_info('Locations') WHERE name='Timezone'";
+                timezoneExists = (long)(await checkCmd.ExecuteScalarAsync())! > 0;
+            }
+            if (!timezoneExists)
+            {
+                await using var alterCmd = conn.CreateCommand();
+                alterCmd.CommandText = "ALTER TABLE \"Locations\" ADD COLUMN \"Timezone\" TEXT NOT NULL DEFAULT 'UTC'";
+                await alterCmd.ExecuteNonQueryAsync();
+            }
+        }
+    }
+    await conn.CloseAsync();
+
+    await db.Database.MigrateAsync();
     await CropSeeder.SeedAsync(db);
 }
 
