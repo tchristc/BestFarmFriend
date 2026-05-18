@@ -1,4 +1,4 @@
-﻿# 🌾 BestFarmFriend
+﻿# 🍎 Best Farm Friend
 
 > A full-stack **Blazor** web application that gives farmers real-time weather intelligence, AI-powered crop advice, and spray-readiness scoring — all tailored to their specific farm location.
 
@@ -16,10 +16,14 @@
 ---
 
 ## 📸 Screenshots
+### Dashboard
+<img width="1249" height="1245" alt="Real-time weather + AI advisory" src="https://github.com/user-attachments/assets/446bd74e-9037-4eae-bc55-f2fb6eee5c92" />
 
-| Dashboard | Crop Calendar | Spray Detail |
-|-----------|--------------|--------------|
-| Real-time weather + AI advisory | Location-aware crop growth stages | Factor-by-factor spray readiness breakdown |
+### Crop Calendar
+<img width="1276" height="1256" alt="Location-aware crop growth stages" src="https://github.com/user-attachments/assets/bb9959e7-13bd-483a-8298-b6e9ba9d33fe" />
+
+### Spray Detail
+<img width="1276" height="1256" alt="Factor-by-factor spray readiness breakdown" src="https://github.com/user-attachments/assets/e5b24ff9-3d43-48ee-bf9b-bdedb9a25157" />
 
 ---
 
