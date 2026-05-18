@@ -1,4 +1,4 @@
-﻿# 🍎 BestFarmFriend
+﻿# 🍎 Best Farm Friend
 
 > A full-stack **Blazor** web application that gives farmers real-time weather intelligence, AI-powered crop advice, and spray-readiness scoring — all tailored to their specific farm location.
 
