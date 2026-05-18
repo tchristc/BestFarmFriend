@@ -2,6 +2,7 @@
   <Folder Name="/src/">
     <Project Path="src/BestFarmFriend.Core/BestFarmFriend.Core.csproj" />
     <Project Path="src/BestFarmFriend.Infrastructure/BestFarmFriend.Infrastructure.csproj" />
+    <Project Path="src/BestFarmFriend.Tests.Unit/BestFarmFriend.Tests.Unit.csproj" />
   </Folder>
   <Folder Name="/src/BestFarmFriend.Web/">
     <File Path="src/plan/plan.md" />
@@ -10,7 +11,11 @@
     <Project Path="src/BestFarmFriend.Web/BestFarmFriend.Web.Client/BestFarmFriend.Web.Client.csproj" />
     <Project Path="src/BestFarmFriend.Web/BestFarmFriend.Web/BestFarmFriend.Web.csproj" />
   </Folder>
-  <Folder Name="/tests/">
-    <Project Path="tests/BestFarmFriend.Tests.Unit/BestFarmFriend.Tests.Unit.csproj" />
+  <Folder Name="/src/plan/">
+    <File Path="src/plan/plan.md" />
+  </Folder>
+  <Folder Name="/src/specs/">
+    <File Path="src/specs/BestFarmFriend-spec.md" />
+    <File Path="src/specs/orchard-spray-spec.md" />
   </Folder>
 </Solution>

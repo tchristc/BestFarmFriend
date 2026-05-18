@@ -5,6 +5,7 @@
 [![.NET](https://img.shields.io/badge/.NET-10.0-512BD4?logo=dotnet)](https://dotnet.microsoft.com/)
 [![Blazor](https://img.shields.io/badge/Blazor-WebAssembly%20%2B%20Server-512BD4?logo=blazor)](https://blazor.net)
 [![Azure](https://img.shields.io/badge/Deployed-Azure%20App%20Service-0078D4?logo=microsoftazure)](https://azure.microsoft.com/)
+[![License](https://img.shields.io/badge/license-Proprietary%20%7C%20All%20Rights%20Reserved-red)](LICENSE)
 
 ---
 
@@ -147,3 +148,9 @@ The app uses EF Core `MigrateAsync()` at startup, so schema changes (including n
 - GitHub: [@tchristc](https://github.com/tchristc)
 
 ---
+
+## u{1F4C4} License
+
+Copyright (c) 2026 Tom Christopherson. All Rights Reserved.
+
+This project is proprietary software. No part of this codebase may be used, copied, modified, or distributed without explicit written permission from the author. See [LICENSE](LICENSE) for full terms.
